@@ -7,7 +7,7 @@ class Client
 
   def initialize(socket)
     @socket = socket
-    # @name = "anonymous"
+    # @name = socket.gets("What's your name?")
   end
 end
 
@@ -15,32 +15,31 @@ class ChatServer
 
   def initialize(port)
     @tcpserver = TCPServer.new(port)
-    @tcpserver.setsockopt( Socket::SOL_SOCKET, Socket::SO_REUSEADDR, 1 )
+    # @tcpserver.setsockopt( Socket::SOL_SOCKET, Socket::SO_REUSEADDR, 1 )
     @connections = []
     @connections << @tcpserver
     puts "Server started..."
   end
 
   def add_connection
-    client = @tcpserver.accept #Client.new(@tcpserver.accept)
-    @connections << client
+    new_connection = @tcpserver.accept
+    @connections << new_connection
 
-    send_message(client, "Welcome to the chat room!\n")
-    # client.name = client.socket.gets
-    # puts client.socket
+    Client.new(new_connection)
 
-
+    new_connection.write("~~~~~Welcome to the Island Foxes chat room!~~~~~\n")
+    new_connection.write("> ")
   end
 
-  def distribute_message(message)
+  def distribute_message(message, sender)
     @connections.each do |connection|
-      send_message(connection, message)
+      send_message(connection, message, sender)
     end
   end
 
-  def send_message(socket, message)
+  def send_message(socket, message, sender_socket)
     unless socket == @tcpserver
-      socket.write("#{socket.peeraddr[2]} says:  #{message}")
+      socket.write("#{sender_socket.peeraddr[2]} says:  #{message}")
       socket.write("> ")
     end
   end
@@ -52,12 +51,13 @@ class ChatServer
 
       if incoming != nil
 
-        for sock in incoming[0]
-          if sock == @tcpserver
+        for socket in incoming[0]
+        # incoming[0].each do |socket|
+          if socket == @tcpserver
             add_connection
           else
-            msg = sock.gets
-            distribute_message(msg)
+            msg = socket.gets
+            distribute_message(msg, socket)
           end
         end
       end
