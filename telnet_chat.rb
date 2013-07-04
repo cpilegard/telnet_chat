@@ -29,14 +29,27 @@ class ChatServer
     new_connection = @tcpserver.accept
     @connections << new_connection
 
-    new_connection.write("\nPlease enter your name: ")
+    new_connection.write("\e[H\e[2J")
+    new_connection.write("~~~~~Welcome to the Island Fox chat room~~~~~\n\n")
+    new_connection.write("Please enter your name: ")
     name = new_connection.gets.chomp
     new_person = Client.new(new_connection, name)
     @people << new_person
 
-    new_connection.write("\n\n~~~~~Welcome, #{name}~~~~~\n\n")
+    new_connection.write("\nWelcome, #{name}!\n")
     new_connection.write("> ")
     distribute_message("#{new_person.name} has joined\n", @connections[0])
+
+    currently_logged_in = []
+    @connections.each do |connection|
+      @people.each do |person|
+        if connection == person.socket
+          currently_logged_in << person.name
+        end
+      end
+    end
+
+    distribute_message("Users: [#{currently_logged_in.join(", ")}]\n", @connections[0])
   end
 
   def distribute_message(message, sender)
