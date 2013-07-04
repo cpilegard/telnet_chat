@@ -27,7 +27,7 @@ class ChatServer
 
     Client.new(new_connection)
 
-    new_connection.write("~~~~~Welcome to the Island Foxes chat room!~~~~~\n")
+    new_connection.write("\n\n~~~~~Welcome to the Island Foxes chat room!~~~~~\n\n")
     new_connection.write("> ")
   end
 
@@ -65,8 +65,6 @@ class ChatServer
   end
 
 end
-
-
 
 # port = ARGV[0]
 chat_room = ChatServer.new(2000)
