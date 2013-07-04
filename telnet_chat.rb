@@ -37,7 +37,8 @@ class ChatServer
     @people << new_person
 
     new_connection.write("\nWelcome, #{name}!\n")
-    new_connection.write("> ")
+    new_connection.write("--type 'exit' to close--\n")
+    new_connection.write("\n> ")
     distribute_message("#{new_person.name} has joined\n", @connections[0])
 
     currently_logged_in = []
@@ -89,7 +90,12 @@ class ChatServer
             add_connection
           else
             msg = socket.gets
-            distribute_message(msg, socket)
+            if msg == "exit\r\n"
+              @connections.delete(socket)
+              socket.close
+            else
+              distribute_message(msg, socket)
+            end
           end
         end
       end
