@@ -2,15 +2,14 @@ require 'socket'
 
 
 class Client
-  @@next_color_holder = 2 #start with yellow, just because
+  @@next_color_holder = rand(6) #start with random color each time
 
   attr_reader :socket, :name
-  # attr_accessor :name
 
   def initialize(socket, name)
     @socket = socket
 
-    col = @@next_color_holder % 7 + 1
+    col = @@next_color_holder % 6 + 1
     @@next_color_holder += 1
     @name = "\033[3#{col}m#{name}\033[0m"
   end
@@ -20,7 +19,6 @@ class ChatServer
 
   def initialize(port)
     @tcpserver = TCPServer.new(port)
-    # @tcpserver.setsockopt( Socket::SOL_SOCKET, Socket::SO_REUSEADDR, 1 )
     @connections = []
     @people = []
     @connections << @tcpserver
@@ -38,6 +36,7 @@ class ChatServer
 
     new_connection.write("\n\n~~~~~Welcome, #{name}~~~~~\n\n")
     new_connection.write("> ")
+    distribute_message("#{new_person.name} has joined\n", @connections[0])
   end
 
   def distribute_message(message, sender)
@@ -48,8 +47,12 @@ class ChatServer
 
   def send_message(socket, message, sender_socket)
     unless socket == @tcpserver
-      name = get_name(sender_socket)
-      socket.write("#{name} says:  #{message}")
+      if sender_socket == @tcpserver
+        name = "\033[4mserver\033[0m"
+      else
+        name = get_name(sender_socket)
+      end
+      socket.write("#{name}:  #{message}")
       socket.write("> ")
     end
   end
@@ -64,13 +67,11 @@ class ChatServer
 
   def start
     while true
-      # connected_sockets = @connections.map { |c| c.socket }
       incoming = IO.select(@connections, nil)
 
       if incoming != nil
 
-        for socket in incoming[0]
-        # incoming[0].each do |socket|
+        incoming[0].each do |socket|
           if socket == @tcpserver
             add_connection
           else
