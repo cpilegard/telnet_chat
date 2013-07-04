@@ -2,12 +2,17 @@ require 'socket'
 
 
 class Client
-  attr_reader :socket
-  attr_accessor :name
+  @@next_color_holder = 2 #start with yellow, just because
 
-  def initialize(socket)
+  attr_reader :socket, :name
+  # attr_accessor :name
+
+  def initialize(socket, name)
     @socket = socket
-    # @name = socket.gets("What's your name?")
+
+    col = @@next_color_holder % 7 + 1
+    @@next_color_holder += 1
+    @name = "\033[3#{col}m#{name}\033[0m"
   end
 end
 
@@ -17,6 +22,7 @@ class ChatServer
     @tcpserver = TCPServer.new(port)
     # @tcpserver.setsockopt( Socket::SOL_SOCKET, Socket::SO_REUSEADDR, 1 )
     @connections = []
+    @people = []
     @connections << @tcpserver
     puts "Server started..."
   end
@@ -25,9 +31,12 @@ class ChatServer
     new_connection = @tcpserver.accept
     @connections << new_connection
 
-    Client.new(new_connection)
+    new_connection.write("\nPlease enter your name: ")
+    name = new_connection.gets.chomp
+    new_person = Client.new(new_connection, name)
+    @people << new_person
 
-    new_connection.write("\n\n~~~~~Welcome to the Island Foxes chat room!~~~~~\n\n")
+    new_connection.write("\n\n~~~~~Welcome, #{name}~~~~~\n\n")
     new_connection.write("> ")
   end
 
@@ -39,8 +48,17 @@ class ChatServer
 
   def send_message(socket, message, sender_socket)
     unless socket == @tcpserver
-      socket.write("#{sender_socket.peeraddr[2]} says:  #{message}")
+      name = get_name(sender_socket)
+      socket.write("#{name} says:  #{message}")
       socket.write("> ")
+    end
+  end
+
+  def get_name(socket)
+    @people.each do |person|
+      if person.socket == socket
+        return person.name
+      end
     end
   end
 
