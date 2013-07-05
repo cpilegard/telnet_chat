@@ -10,6 +10,7 @@ $island_fox =
   \\     \\_  /  /     Island Fox
    [ [ /  \\/ _/       Chat Room!
   _[ [ \\  /_/\n"     
+
 class Client
   @@next_color_holder = rand(6) #start with random color each time
 
@@ -53,8 +54,6 @@ class ChatServer
     new_connection.write("#{@commands}\n")
     new_connection.write("> ")
     distribute_message("#{new_person.name} has joined\n", @connections[0])
-
-    # distribute_message("Users: [#{currently_logged_in.join(", ")}]\n", @connections[0])
   end
 
   def currently_logged_in
@@ -110,7 +109,7 @@ class ChatServer
 
         incoming[0].each do |socket|
           if socket == @tcpserver
-            Thread.new { add_connection }
+            add_connection
           else
             msg = socket.gets.split(' ', 3)
             if msg[0] == "-exit"
