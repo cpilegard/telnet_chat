@@ -1,6 +1,15 @@
 require 'socket'
 
-
+$island_fox =
+ " /\\   /\\           
+//\\\\_//\\\\     ____ 
+\\_     _/    /   /    
+ / * * \\    /^^^]     
+ \\_\\O/_/    [   ]    Welcome
+  /   \\_    [   /     to the
+  \\     \\_  /  /     Island Fox
+   [ [ /  \\/ _/       Chat Room!
+  _[ [ \\  /_/\n"     
 class Client
   @@next_color_holder = rand(6) #start with random color each time
 
@@ -34,15 +43,15 @@ class ChatServer
     @connections << new_connection
 
     new_connection.write("\e[H\e[2J")
-    new_connection.write("~~~~~Welcome to the Island Fox chat room~~~~~\n\n")
-    new_connection.write("Please enter your name: ")
+    new_connection.write($island_fox)
+    new_connection.write("\nPlease enter your name: ")
     name = new_connection.gets.chomp
     new_person = Client.new(new_connection, name)
     @people << new_person
 
     new_connection.write("\nWelcome, #{name}!\n")
     new_connection.write("#{@commands}\n")
-    new_connection.write("\n> ")
+    new_connection.write("> ")
     distribute_message("#{new_person.name} has joined\n", @connections[0])
 
     # distribute_message("Users: [#{currently_logged_in.join(", ")}]\n", @connections[0])
@@ -101,7 +110,7 @@ class ChatServer
 
         incoming[0].each do |socket|
           if socket == @tcpserver
-            add_connection
+            Thread.new { add_connection }
           else
             msg = socket.gets.split(' ', 3)
             if msg[0] == "-exit"
@@ -131,6 +140,6 @@ class ChatServer
 
 end
 
-# port = ARGV[0]
-chat_room = ChatServer.new(2000)
+port = ARGV[0].to_i
+chat_room = ChatServer.new(port)
 chat_room.start
