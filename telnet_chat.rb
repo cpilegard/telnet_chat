@@ -112,7 +112,7 @@ class ChatServer
               distribute_message("#{leaving.name} has left\n", @connections[0])
             elsif msg[0] == "-help"
               send_message(socket, @commands, @connections[0])
-            elsif msg == "-users"
+            elsif msg[0] == "-users"
               send_message(socket, "Users: [#{currently_logged_in}]\n", @connections[0])
             elsif msg[0] == "-pm" && msg.length == 3
               target = get_person_from_name(msg[1])
