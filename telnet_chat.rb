@@ -90,6 +90,7 @@ class ChatServer
         return person
       end
     end
+    nil
   end
 
   def start
@@ -102,25 +103,25 @@ class ChatServer
           if socket == @tcpserver
             add_connection
           else
-            msg = socket.gets
-            if msg == "-exit\r\n"
+            msg = socket.gets.split(' ', 3)
+            if msg[0] == "-exit"
               @connections.delete(socket)
               leaving = get_person_from_socket(socket)
               @people.delete(leaving)
               socket.close
               distribute_message("#{leaving.name} has left\n", @connections[0])
-            elsif msg == "-help\r\n"
+            elsif msg[0] == "-help"
               send_message(socket, @commands, @connections[0])
-            elsif msg == "-users\r\n"
+            elsif msg == "-users"
               send_message(socket, "Users: [#{currently_logged_in}]\n", @connections[0])
-            elsif msg.split(' ', 3)[0] == "-pm"
-              target = get_person_from_name(msg.split(' ', 3)[1])
+            elsif msg[0] == "-pm" && msg.length == 3
+              target = get_person_from_name(msg[1])
               if target != nil
-                send_message(target.socket, "[private] " + msg.split(' ', 3)[2], socket)
+                send_message(target.socket, "[private] " + msg[2], socket)
                 socket.write("> ")
               end
             else
-              distribute_message(msg, socket)
+              distribute_message(msg.join(' ') + "\n", socket)
             end
           end
         end
